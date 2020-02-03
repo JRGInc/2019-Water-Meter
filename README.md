@@ -133,7 +133,7 @@ A number of steps must be completed before images can be used to train the Tenso
 
 1. Create cropped images of each digit in digit window.
 2. Move digits into directory according to position in digit window.
-3. Select digits for use in model training.
+3. Select digits for use in model training (**See Note Below**).
 4. Further crop digits on left and right edges to shift the center of the digit in the resulting image.
 5. Split the images into two datasets: train and validate.
 
@@ -153,12 +153,27 @@ self.batch_proc_en_dict = {
 	'test_model': False,
 }
 ```
-Afterwards, for steps 1, 2, 4, and 5 open terminal and execute BASH code: 
+After each step in sequence, for steps 1, 2, 4, and 5, open terminal and execute BASH code: 
 
 ```
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 
+The output directories for these steps are located here:
+
+```
+# Step 1
+/opt/Janus/WM/data/images/10--digits
+# Step 2
+/opt/Janus/WM/data/images/13--train_sifted/dN
+# Step 4
+opt/Janus/WM/data/images/15--train
+# Step 5
+opt/Janus/WM/data/images/16--valid
+```
+
+Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data/images/01--xxx``` to ```/opt/Janus/data/images/09--xxx```, which can be analyzed for troubleshooting scaling, rotation, and cropping functions.
+
 ### Important Note for Step 3:
 
-For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and moved to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects not easy to investigate.  The images can be selected and copied in bulk or individually.
+For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects not easy to investigate.  The images can be selected and copied in bulk or individually.
