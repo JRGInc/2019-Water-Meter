@@ -172,7 +172,7 @@ opt/Janus/WM/data/images/15--train
 opt/Janus/WM/data/images/16--valid
 ```
 
-Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data/images/01--xxx``` to ```/opt/Janus/data/images/09--xxx```, which can be analyzed for troubleshooting scaling, rotation, and cropping functions.
+Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data/images/02--scaled``` to ```/opt/Janus/data/images/09--contoured```, which can be analyzed for troubleshooting scaling, rotation, and cropping functions.
 
 ### Important Note for Step 3:
 
