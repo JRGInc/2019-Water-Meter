@@ -36,17 +36,22 @@ After downloading the code, create the following additional directory structure 
 		/12--overlaid
 		/13--train_sifted
 			# Directories /d0 to /d5 
+			# (representing 6 digit positions in the digit window)
 		/14--train_selected
-			# Directories /d0 to /d5 each containing directories /0 to /29
+			# Directories /d0 to /d5 each containing directories /0 to /29 
+			# (representing 30 classes of each digit position)
 		/15--train
 		/16--valid
 		/17--test_sifted
-			# Directories /d0 to /d5 
+			# Directories /d0 to /d5 (representing 6 digit positions in the digit window)
+			# (representing 6 digit positions in the digit window)
 		/18--test_selected
 			# Directories /d0 to /d5 each containing directories /0 to /29
+			# (representing 30 classes of each digit position)
 		/19--test
 		/20--test_errors
 			# Directories /0 to /29 each containing directories /0 to /29
+			# (representing 30 classes each with 30 classes where images were misclassified)
 	/latest
 	/results
 	/transmit
@@ -60,7 +65,7 @@ After downloading the code, create the following additional directory structure 
 	/periodic
 ```
 
-## Capture Images for TensorFlow Model Training
+## Capture Videos and Convert to Images for TensorFlow Model Training
 
 This requires two Raspberry Pis: one with TB6600 stepper motor driver and NEMA 17 stepper motor attached to meter shaft, the other with PiCamera v2 to image meter.  It is important to have smooth and consistent shaft rotation. Then RPI3B+ on the stepper motor rotates the motor much more smoothly than the RPI0W.  Each full rotation of the least significant digit requires approximately 200 main shaft rotations on the meter.
 
@@ -74,7 +79,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
 
 2. On the stepper controller Raspberry Pi
    - Determine number of target rotations (20,000) is a good starting point (expect this to take hours)
-   - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
+   - Graphically open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
    - Find and edit this python line with number of rotations:
 
 ```
@@ -95,7 +100,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 6.  Transfer these files to the identical directory on the desktop computer.  These files are large and numerous, best to use a USB stick, rather than SFTP.
 7.  On desktop computer:
 	  - Set the execution routine to extract JPG images from the video files and disable all other routines
-	  - Graphicaly open ```/opt/Janus/WM/python3/config/core.py``` for editing
+	  - Graphically open ```/opt/Janus/WM/python3/config/core.py``` for editing
 	  - Find (near bottom) and edit this python dictionary to appear as follows
 ```
 self.batch_proc_en_dict = {
@@ -122,3 +127,38 @@ username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 7. Cont'd:
    - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
 	
+## Preprocess Converted Images
+
+A number of steps must be completed before images can be used to train the TensorFlow Inception v4 model:
+
+1. Create cropped images of each digit in digit window.
+2. Move digits into directory according to position in digit window.
+3. Select digits for use in model training.
+4. Further crop digits on left and right edges to shift the center of the digit in the resulting image.
+5. Split the images into two datasets: train and validate.
+
+For each of these steps (except step 3), the python dictionary in the file ```/opt/Janus/WM/python3/config/core.py``` must be edited, changing the appropriate line to ```True``` and leaving all others as ```False```:
+
+```
+self.batch_proc_en_dict = {
+	'convert_h264': False,
+	'build_train_digits': False,  # Step 1, change to True
+	'sift_train_digits': False,   # Step 2, change to True
+	'shift_train_digits': False,  # Step 4, change to True
+	'split_dataset': False,       # Step 5, change to True
+	'train_model': False,
+	'build_test_images': False,
+	'sift_test_digits': False,
+	'save_test_digits': False,
+	'test_model': False,
+}
+```
+Afterwards, for steps 1, 2, 4, and 5 open terminal and execute BASH code: 
+
+```
+username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+```
+
+### Important Note for Step 3:
+
+For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and moved to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects not easy to investigate.  The images can be selected and copied in bulk or individually.
