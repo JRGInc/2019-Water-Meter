@@ -177,3 +177,27 @@ Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data
 ### Important Note for Step 3:
 
 For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects not easy to investigate.  The images can be selected and copied in bulk or individually.
+
+### Image Preprocessing Settings
+
+A number of settings can be changed that will directly impact the script.  They are located in ```/opt/Janus/WM/config/tensor.ini```.  These are loaded once at the beginning of execution for each step.  Once these settings are set, they should not be changed for the duration on the entire project: training, testing, and predictions.  The following provides a summary of these settings:
+
+```
+[TensorFlow]
+full_width = 84           # Full width of each individual digit (width of digit window on training images divided by six)
+tf_width = 65		  # Width of digit fed into TensorFlow prior to TensorFlow operations
+shadow = 6                # Visual shadow at top of digit window caused by lighting
+height = 93		  # Height of digit fed into TensorFlow prior to TensorFlow operations
+shift_en = True		  # Enables left to right shifting of tf_width crop window inside full_width window
+			  # Digit cylinders have left to right wobble during rotation
+shift = 18 		  # How many times to shift the image
+batch_size = 6            # TensorFlow batch size set to number of digits in digit window
+img_tgt_width = 299       # Width required by Inception v4 model
+img_tgt_height = 299	  # Height required by Inception v4 model
+			  # TensorFlow upscales smaller images to meet requirements
+nbr_classes = 30          # Number of classes into which images are sorted
+nbr_channels = 1          # 1 = single-color gray-scale JPG, 3 = RGB JPG
+patience = 3              # Number of epochs to wait before ending training early if criteria is met
+epochs = 8		  # Max number of epochs to train model
+format = h5		  # Model file format
+```
