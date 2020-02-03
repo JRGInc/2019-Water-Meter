@@ -96,7 +96,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 7.  On desktop computer:
 	  - Set the execution routine to extract JPG images from the video files and disables all other routines
 	  - Graphicaly open ```/opt/Janus/WM/python3/config/core.py``` for editing
-	  - Find and edit this code block to appear as follows
+	  - Find (near bottom) and edit this code block to appear as follows
 ```
 self.batch_proc_en_dict = {
 	'convert_h264': True,
