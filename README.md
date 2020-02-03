@@ -324,6 +324,7 @@ self.batch_proc_en_dict = {
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 
+This produces a ```CSV``` file in ```/opt/Janus/WM/data/results``` directory with file name convention of ```Predictions_vN_AAA_BBB_CCC_YYYY-MM-DD_HHMM.cs```, where ```AAA``` is the train version number, ```BBB``` is the test version number, and ```CCC``` is the test set number.  These numbers can be set in ```/opt/Janus/WM/python3/config/core.py``` near the top of the file, according to a designated scheme.  The ```N``` number designates the class number being tested.  It is set in ```/opt/Janus/WM/python3/main-test.py``` with the ```value``` python variable near the end of the file.
 
 
 
