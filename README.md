@@ -204,7 +204,7 @@ format = h5		  # Model file format
 
 ## Train TensorFlow Inception v4 Model
 
-A dedicated computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been time to take 18 hours.  More and larger image sizes will significantly increase training time.  
+A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been observed to take 18 hours.  More and larger image sizes will significantly increase training time.  
 
 1. Code must be downloaded to the proper location and additional directories setup as noted above.
 2. If using a dedicated computer, images located in the ```/opt/Janus/WM/data/images/15--train``` and ```/opt/Janus/WM/data/images/16--valid``` directories must be copied to the identical location on the dedicated computer.
