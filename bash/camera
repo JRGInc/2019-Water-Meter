@@ -1,0 +1,39 @@
+#!/bin/bash
+source /home/pi/gpio
+GPIO_PINS='4'
+
+# Path to the serial number file
+SN_FILENAME="/home/pi/serialnumber"
+
+# Read the serial number for the next filename
+SN=$(cat "$SN_FILENAME")
+
+
+# use BCM 4 to control the LED "flash"
+sudo /home/pi/gpio mode 4 out
+
+# turn on the LED flash
+sudo /home/pi/gpio write 4 1
+sleep 0.25
+
+
+DATE=$(date +"%Y-%m-%d_%H%M")
+
+IMAGE_FILENAME=$SN'_'$DATE
+
+# Original command to take image and store it
+# raspistill -w 1024 -h 768 -n -t 100 -q 25 -e jpg -th none -o /home/pi/meter_images/$DATE.jpg
+
+# Same as original but a serial number is prepended to the filename
+raspistill -w 1024 -h 768 -n -t 100 -q 25 -e jpg -th none -o /home/pi/meter_images/$IMAGE_FILENAME.jpg
+
+# The following line is for testing only
+# echo text > /home/pi/meter_images/$IMAGE_FILENAME.jpg
+
+
+# Increment the serial number and write it to the serianumber file
+NEW_SN=$((SN+1))
+echo $NEW_SN > $SN_FILENAME
+
+# turn off the LED flash
+sudo /home/pi/gpio write 4 0
