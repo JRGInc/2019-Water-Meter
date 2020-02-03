@@ -125,17 +125,17 @@ self.batch_proc_en_dict = {
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 7. Cont'd:
-   - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
+   - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory with file name convention ```orig_YYYY-MM-DD_HHMM_nnnnnnn_sgNNNN.jpg```, where `nnnnnnn` represents an incremental capture sequence, and ```sgNNNN``` represents the video segment number.
 	
-## Preprocess Converted Images
+## Preprocess Converted Images for Training
 
 A number of steps must be completed before images can be used to train the TensorFlow Inception v4 model:
 
 1. Create cropped images of each digit in digit window.
-2. Move digits into directory according to position in digit window.
+2. Copy digits into directory according to position in digit window.
 3. Select digits for use in model training (**See Note Below**).
 4. Further crop digits on left and right edges to shift the center of the digit in the resulting image.
-5. Split the images into two datasets: train and validate.  Both sets are used during model training.
+5. Random copy of training images to validatation images.  Both sets are used during model training.
 
 For each of these steps (except step 3), the python dictionary in the file ```/opt/Janus/WM/python3/config/core.py``` must be edited, changing the appropriate line to ```True``` and leaving all others as ```False```:
 
@@ -176,7 +176,7 @@ Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data
 
 ### Important Note for Step 3:
 
-For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects not easy to investigate.  The images can be selected and copied in bulk or individually.
+For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/14--train-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will negatively impact accuracy of predictions at a later stage--with affects that are not easy to investigate.  The images can be selected and copied in bulk or individually.
 
 ### Image Preprocessing Settings
 
@@ -204,7 +204,7 @@ format = h5		  # Model file format
 
 ## Train TensorFlow Inception v4 Model for Image Classification
 
-A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been observed to take 18 hours.  More and larger image sizes will significantly increase training time.  
+A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been observed to take 18 hours.  More images and larger image sizes will significantly increase training time.  
 
 1. Code must be downloaded to the proper location and additional directories setup as noted above.
 2. If using a dedicated computer, images located in the ```/opt/Janus/WM/data/images/15--train``` and ```/opt/Janus/WM/data/images/16--valid``` directories must be copied to the identical location on the dedicated computer.
@@ -231,10 +231,100 @@ self.batch_proc_en_dict = {
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 
-After each epoch of training, the validation image set is compared to present state of the model.  This produces for each epoch a four data points: loss, accuracy, validation loss, and validation accuracy.  Additionally, weights are produced for each epoch and saved in ```/opt/Janus/WM/weights/periodic``` and a functional model is saved in ```/opt/Janus/WM/model```
+After each epoch of training, the validation image set is compared to present state of the model.  Since the proper classification of images in both sets are known, TensorFlow provides a dynamic status of the model after each epoch: loss, accuracy, validation loss, and validation accuracy.  In the early epochs loss should trend heavily downward and accuracy heavily upward.  As training progresses these values will plateau.  Weights are produced for each epoch and saved in ```/opt/Janus/WM/weights/periodic``` and a functional model is saved in ```/opt/Janus/WM/model```
 
 At the end of training, final weights and model are saved in ```/opt/Janus/WM/weights/final``` and ```/opt/Janus/WM/model```, respectively.  An accuracy and loss vs epoch chart is produced and saved in ```/opt/Janus/WM/weights```.
 
 ### Important Note for Training
 
 During the first epoch of training a data file of both the train and validation images are built in ```/opt/Janus/WM/cache/train``` and ```/opt/Janus/WM/cache/valid```, respectively.  If images are added, changed, or deleted in any fashion, these directories must be emptied prior to re-execution of training.
+
+## Images for Model Testing
+
+Prior collecting images for testing, the videos in the ```/opt/Janus/WM/data/images/00--movies``` and ```/opt/Janus/WM/data/images/01--originals``` directories which previously contained the unprocessed training images should be archived to prevent loss.
+
+At this point a decision must be made to collect a new set of images, either in video format or JPG format.  The videos should be processed exactly as those used for training images (see **Capture Videos and Convert to Images for TensorFlow Image Classification Model Training** above).  An image set, if available, which will provide more useful results are images captured in real operations.  
+
+Once JPG images are extracted or chosen, they should be placed in ```/opt/Janus/WM/data/images/01--original``` directory.  File name convention for the images should follow ```orig_YYYY-MM-DD_HHMM_nnnnnnn_sgNNNN.jpg```, where `nnnnnnn` represents an incremental capture sequence, and ```sgNNNN``` represents the video segment number. Use ```sg0001``` for individually captured still images.  A useful linux program to use for bulk renaming operations is ```gprename```.
+
+## Preprocess Converted Images for Testing
+
+In a manner similar to model training, a number of steps must be completed before images can be used to test the TensorFlow Inception v4 model:
+
+1. Create cropped images of each digit in digit window.
+2. Copy digits into directory according to position in digit window.
+3. Select digits for use in model testing (**See Note Below**).
+4. Copy selected digits to director for testing
+
+For each step (except step 3), the python dictionary in the file ```/opt/Janus/WM/python3/config/core.py``` must be edited, changing the appropriate line to ```True``` and leaving all others as ```False```:
+
+```
+self.batch_proc_en_dict = {
+	'convert_h264': False,
+	'build_train_digits': False, 
+	'sift_train_digits': False,  
+	'shift_train_digits': False,  
+	'split_dataset': False,       
+	'train_model': False,
+	'build_test_images': False,	# Step 1, change to True
+	'sift_test_digits': False,	# Step 2, change to True
+	'save_test_digits': False,	# Step 4, change to True
+	'test_model': False,
+}
+```
+After each step in sequence, for steps 1, 2, and 4, open terminal and execute BASH code: 
+
+```
+username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+```
+
+The output directories for these steps are located here:
+
+```
+# Step 1
+/opt/Janus/WM/data/images/10--digits
+# Step 2
+/opt/Janus/WM/data/images/17--test_sifted/dN
+# Step 4
+opt/Janus/WM/data/images/19--test
+```
+
+Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data/images/02--scaled``` to ```/opt/Janus/data/images/09--contoured```, which can be analyzed for troubleshooting scaling, rotation, and cropping functions.
+
+### Important Note for Step 3:
+
+For step 3, the images in ```/opt/Janus/WM/data/images/17--test_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/18--test-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will result in erroneous accuracy calculations at a later stage--with affects that are not easy to investigate.  The images can be selected and copied in bulk or individually.
+
+## Test TensorFlow Inception v4 Model for Image Classification
+
+A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 2,000 training images, testing time has been observed to take 2 hours.  More images will significantly increase testing time.  
+
+1. Code must be downloaded to the proper location and additional directories setup as noted above.
+2. If using a dedicated computer, images located in the ```/opt/Janus/WM/data/images/19--test```directory must be copied to the identical location on the dedicated computer.  Additionally all models in ```/opt/Janus/WM/model``` and weights in ```/opt/Janus/WM/weights``` directories must be copied to identical locations.
+3. The file ```/opt/Janus/WM/python3/config/core.py``` must be edited as noted here:
+
+```
+self.batch_proc_en_dict = {
+	'convert_h264': False,
+	'build_train_digits': False,
+	'sift_train_digits': False,
+	'shift_train_digits': False,
+	'split_dataset': False,
+	'train_model': False,
+	'build_test_images': False,
+	'sift_test_digits': False,
+	'save_test_digits': False,
+	'test_model': True,
+}
+```
+
+4. Open terminal and execute BASH code: 
+
+```
+username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+```
+
+
+
+
+
