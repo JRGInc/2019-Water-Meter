@@ -99,16 +99,16 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 	  - Find and edit this code block to appear as follows
 ```
 self.batch_proc_en_dict = {
-		'convert_h264': True,
-		'build_train_digits': False,
-		'sift_train_digits': False,
-		'shift_train_digits': False,
-		'split_dataset': False,
-		'train_model': False,
-		'build_test_images': False,
-		'sift_test_digits': False,
-		'save_test_digits': False,
-		'test_model': False,
+	'convert_h264': True,
+	'build_train_digits': False,
+	'sift_train_digits': False,
+	'shift_train_digits': False,
+	'split_dataset': False,
+	'train_model': False,
+	'build_test_images': False,
+	'sift_test_digits': False,
+	'save_test_digits': False,
+	'test_model': False,
 }
 ```
 
