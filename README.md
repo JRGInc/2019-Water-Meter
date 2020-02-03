@@ -94,7 +94,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 5.  Download code to desktop computer and build directory structure outlined above.
 6.  Transfer these files to the identical directory on the desktop computer.  These files are large and numerous, best to use a USB stick, rather than SFTP.
 7.  On desktop computer:
-	  - Set the execution routine to extract JPG images from the video files and disables all other routines
+	  - Set the execution routine to extract JPG images from the video files and disable all other routines
 	  - Graphicaly open ```/opt/Janus/WM/python3/config/core.py``` for editing
 	  - Find (near bottom) and edit this python dictionary to appear as follows
 ```
