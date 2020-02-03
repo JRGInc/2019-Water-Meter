@@ -81,9 +81,8 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
 stepper.rotate_motor(18000)
 ```
 
-2. Cont'd:
-	 - Close file
-	 - Open terminal and execute BASH code
+   - Close file
+   - Open terminal and execute BASH code
 
 ```
 pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
