@@ -180,7 +180,7 @@ For step 3, the images in ```/opt/Janus/WM/data/images/13--train_sifted/dN``` mu
 
 ### Image Preprocessing Settings
 
-A number of settings can be changed that will directly impact the script.  They are located in ```/opt/Janus/WM/config/tensor.ini```.  These are loaded once at the beginning of execution for each step.  Once these settings are set, they should not be changed for the duration on the entire project: training, testing, and predictions.  The following provides a summary of these settings:
+A number of settings can be changed that are located in ```/opt/Janus/WM/config/tensor.ini```.  These are loaded once at the beginning of execution for each step.  Once these settings are set, they should not be changed for the duration on the entire project: training, testing, and predictions.  Changes made here can cause code execution or image preprocessing failures.  The following provides a summary of these settings:
 
 ```
 [TensorFlow]
