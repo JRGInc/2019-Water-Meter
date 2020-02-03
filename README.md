@@ -2,9 +2,9 @@
 
 This code library executes several functions:
 
-1. Train Inception v4 with TensorFlow on Ubuntu desktop computer with nVidia GPU
-2. Test Inception v4 with TensorFlow on Ubuntu desktop computer with nVidia GPU
-3. Image capture, prediction, and transmission on Raspberry PI with PiCamera v2
+1. Train Inception v4 image classification model with TensorFlow on Ubuntu desktop computer with nVidia GPU
+2. Test Inception v4 image classification with TensorFlow on Ubuntu desktop computer with nVidia GPU
+3. Image capture, classification, and transmission on Raspberry PI with PiCamera v2
 4. Control stepper motor controller via Raspberry PI with TB6600 to rotate water meter shaft
 5. Image capture experimentation on Raspberry PI
 
@@ -65,7 +65,7 @@ After downloading the code, create the following additional directory structure 
 	/periodic
 ```
 
-## Capture Videos and Convert to Images for TensorFlow Model Training
+## Capture Videos and Convert to Images for TensorFlow Image Classification Model Training
 
 This requires two Raspberry Pis: one with TB6600 stepper motor driver and NEMA 17 stepper motor attached to meter shaft, the other with PiCamera v2 to image meter.  It is important to have smooth and consistent shaft rotation. Then RPI3B+ on the stepper motor rotates the motor much more smoothly than the RPI0W.  Each full rotation of the least significant digit requires approximately 200 main shaft rotations on the meter.
 
@@ -202,7 +202,7 @@ epochs = 8		  # Max number of epochs to train model
 format = h5		  # Model file format
 ```
 
-## Train TensorFlow Inception v4 Model
+## Train TensorFlow Inception v4 Model for Image Classification
 
 A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been observed to take 18 hours.  More and larger image sizes will significantly increase training time.  
 
