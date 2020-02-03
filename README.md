@@ -81,6 +81,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
 stepper.rotate_motor(18000)
 ```
 
+2. Cont'd
    - Close file
    - Open terminal and execute BASH code
 
@@ -112,12 +113,12 @@ self.batch_proc_en_dict = {
 ```
 
 7. Cont'd:
-	 - Close file
-	 - Open terminal and execute BASH code:
+   - Close file
+   - Open terminal and execute BASH code:
 
 ```
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 7. Cont'd:
-	 - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
+   - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
 	
