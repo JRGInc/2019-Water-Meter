@@ -73,17 +73,17 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
 ```
 
 2. On the stepper controller Raspberry Pi
-  - Determine number of target rotations (20,000) is a good starting point (expect this to take hours)
-  - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
-	- Find and edit this line:
+   - Determine number of target rotations (20,000) is a good starting point (expect this to take hours)
+   - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
+   - Find and edit this line:
 
 ```
 stepper.rotate_motor(18000)
 ```
 
 2. Cont'd:
-	- Close file
-	- Open terminal and execute BASH code
+	 - Close file
+	 - Open terminal and execute BASH code
 
 ```
 pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
@@ -94,9 +94,9 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 5.  Download code to desktop computer and build directory structure outlined above.
 6.  Transfer these files to the identical directory on the desktop computer.  These files are large and numerous, best to use a USB stick, rather than SFTP.
 7.  On desktop computer:
-	- Set the execution routine to extract JPG images from the video files and disables all other routines
-	- Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
-	- Find and edit this code block to appear as follows
+	  - Set the execution routine to extract JPG images from the video files and disables all other routines
+	  - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
+	  - Find and edit this code block to appear as follows
 ```
 self.batch_proc_en_dict = {
 		'convert_h264': True,
@@ -113,12 +113,12 @@ self.batch_proc_en_dict = {
 ```
 
 7. Cont'd:
-	- Close file
-	- Open terminal and execute BASH code:
+	 - Close file
+	 - Open terminal and execute BASH code:
 
 ```
 username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
 ```
 7. Cont'd:
-	- Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
+	 - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory.
 	
