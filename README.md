@@ -135,7 +135,7 @@ A number of steps must be completed before images can be used to train the Tenso
 2. Move digits into directory according to position in digit window.
 3. Select digits for use in model training (**See Note Below**).
 4. Further crop digits on left and right edges to shift the center of the digit in the resulting image.
-5. Split the images into two datasets: train and validate.
+5. Split the images into two datasets: train and validate.  Both sets are used during model training.
 
 For each of these steps (except step 3), the python dictionary in the file ```/opt/Janus/WM/python3/config/core.py``` must be edited, changing the appropriate line to ```True``` and leaving all others as ```False```:
 
@@ -201,3 +201,40 @@ patience = 3              # Number of epochs to wait before ending training earl
 epochs = 8		  # Max number of epochs to train model
 format = h5		  # Model file format
 ```
+
+## Train TensorFlow Inception v4 Model
+
+A dedicated computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been time to take 18 hours.  More and larger image sizes will significantly increase training time.  
+
+1. Code must be downloaded to the proper location and additional directories setup as noted above.
+2. If using a dedicated computer, images located in the ```/opt/Janus/WM/data/images/15--train``` and ```/opt/Janus/WM/data/images/16--valid``` directories must be copied to the identical location on the dedicated computer.
+3. The file ```/opt/Janus/WM/python3/config/core.py``` must be edited as noted here:
+
+```
+self.batch_proc_en_dict = {
+	'convert_h264': False,
+	'build_train_digits': False,
+	'sift_train_digits': False,
+	'shift_train_digits': False,
+	'split_dataset': False,
+	'train_model': True,
+	'build_test_images': False,
+	'sift_test_digits': False,
+	'save_test_digits': False,
+	'test_model': False,
+}
+```
+
+4. Open terminal and execute BASH code: 
+
+```
+username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+```
+
+After each epoch of training, the validation image set is compared to present state of the model.  This produces for each epoch a four data points: loss, accuracy, validation loss, and validation accuracy.  Additionally, weights are produced for each epoch and saved in ```/opt/Janus/WM/weights/periodic``` and a functional model is saved in ```/opt/Janus/WM/model```
+
+At the end of training, final weights and model are saved in ```/opt/Janus/WM/weights/final``` and ```/opt/Janus/WM/model```, respectively.  An accuracy and loss vs epoch chart is produced and saved in ```/opt/Janus/WM/weights```.
+
+### Important Note for Training
+
+During the first epoch of training a data file of both the train and validation images are built in ```/opt/Janus/WM/cache/train``` and ```/opt/Janus/WM/cache/valid```, respectively.  If images are added, changed, or deleted in any fashion, these directories must be emptied.
