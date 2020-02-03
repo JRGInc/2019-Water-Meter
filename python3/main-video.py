@@ -39,7 +39,7 @@ if __name__ == '__main__':
     log = 'JanusWM Model logging started'
     logger.info(msg=log)
 
-    core_cfg = CoreCfg(mode_str='rpi')
+    core_cfg = CoreCfg()
 
     capture_cfg = CaptureCfg(core_cfg=core_cfg)
     err_xmit_url = capture_cfg.get(attrib='err_xmit_url')
