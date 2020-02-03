@@ -74,13 +74,14 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
 
 2. On the stepper controller Raspberry Pi
   - Determine number of target rotations (20,000) is a good starting point (expect this to take hours)
-	- Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
+  - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
 	- Find and edit this line:
 
 ```
 stepper.rotate_motor(18000)
 ```
 
+2. Cont'd:
 	- Close file
 	- Open terminal and execute BASH code
 
