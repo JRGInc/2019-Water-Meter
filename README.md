@@ -95,7 +95,7 @@ pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
 6.  Transfer these files to the identical directory on the desktop computer.  These files are large and numerous, best to use a USB stick, rather than SFTP.
 7.  On desktop computer:
 	  - Set the execution routine to extract JPG images from the video files and disables all other routines
-	  - Graphicaly open ```/opt/Janus/WM/python3/main-stepper.py``` for editing
+	  - Graphicaly open ```/opt/Janus/WM/python3/config/core.py``` for editing
 	  - Find and edit this code block to appear as follows
 ```
 self.batch_proc_en_dict = {
