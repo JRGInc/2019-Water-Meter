@@ -573,15 +573,25 @@ pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/januswm.py
 
 This sets two tasks in a CRON table: ```main-capture.py``` and ```main-transmit.py```.  They can be viewed at any time by opening a terminal and executing BASH code:
 
-
 ```
 pi@raspberrypi:~$ crontab -l
 ```
 
 To stop execution, open terminal and execute BASH code:
 
-
 ```
 pi@raspberrypi:~$ crontab -r
 ```
 
+
+## Image Experimentation
+
+A method was created to allow the operator to make comparisons between various camera settings on the Raspberry Pi.  The output for this function is stored in ```/opt/Janus/WM/data/images/01--original```.
+
+The program is run by opening a terminal and executing BSAH code:
+
+```
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-experiment.py
+```
+
+All of the camera settings are located in the ```main-experiment.py``` file.  Owing to the fluid nature of the code, no explanations are given here.  The operator should study it and change it according to predetermined needs.
