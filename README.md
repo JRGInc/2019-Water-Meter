@@ -74,7 +74,7 @@ The method used to gather images for training is to capture video while the mete
 1. Start continuous video capture on the Raspberry Pi from terminal:
 
 ```
-pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-video.py
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-video.py
 ```
 
 2. On the stepper controller Raspberry Pi
@@ -91,7 +91,7 @@ stepper.rotate_motor(18000)
    - Open terminal and execute BASH code
 
 ```
-pi@raspberrypi:~$ sudo /opt/Janus/WM/python3/main-stepper.py
+pi@raspberrypi:~$ python3 /opt/Janus/WM/python3/main-stepper.py
 ```
  
 3.  After stepper motor completes rotations, stop the video cpature by selecting terminal window and pressing ```CTRL-C```.
@@ -122,7 +122,7 @@ self.batch_proc_en_dict = {
    - Open terminal and execute BASH code:
 
 ```
-username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 7. Cont'd:
    - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory with file name convention ```orig_YYYY-MM-DD_HHMM_nnnnnnn_sgNNNN.jpg```, where `nnnnnnn` represents an incremental capture sequence, and ```sgNNNN``` represents the video segment number.
@@ -156,7 +156,7 @@ self.batch_proc_en_dict = {
 After each step in sequence, for steps 1, 2, 4, and 5, open terminal and execute BASH code: 
 
 ```
-username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 
 The output directories for these steps are located here:
@@ -228,7 +228,7 @@ self.batch_proc_en_dict = {
 4. Open terminal and execute BASH code: 
 
 ```
-username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 
 After each epoch of training, the validation image set is compared to present state of the model.  Since the proper classification of images in both sets are known, TensorFlow provides a dynamic status of the model after each epoch: loss, accuracy, validation loss, and validation accuracy.  In the early epochs loss should trend heavily downward and accuracy heavily upward.  As training progresses these values will plateau.  Weights are produced for each epoch and saved in ```/opt/Janus/WM/weights/periodic``` and a functional model is saved in ```/opt/Janus/WM/model```
@@ -275,7 +275,7 @@ self.batch_proc_en_dict = {
 After each step in sequence, for steps 1, 2, and 4, open terminal and execute BASH code: 
 
 ```
-username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 
 The output directories for these steps are located here:
@@ -321,15 +321,251 @@ self.batch_proc_en_dict = {
 4. Open terminal and execute BASH code: 
 
 ```
-username@hostname:~$ sudo /opt/Janus/WM/python3/main-train.py
+username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 
-This produces a ```CSV``` file in ```/opt/Janus/WM/data/results``` directory with file name convention of ```Predictions_vN_AAA_BBB_CCC_YYYY-MM-DD_HHMM.cs```, where ```AAA``` is the train version number, ```BBB``` is the test version number, and ```CCC``` is the test set number.  These numbers can be set in ```/opt/Janus/WM/python3/config/core.py``` near the top of the file, according to a designated scheme.  
+This produces a ```CSV``` file in ```/opt/Janus/WM/data/results``` directory with file name convention of ```Predictions_vN_AAA_BBB_CCC_YYYY-MM-DD_HHMM.csv```, where ```AAA``` is the train version number, ```BBB``` is the test version number, and ```CCC``` is the test set number.  These numbers can be set in ```/opt/Janus/WM/python3/config/core.py``` near the top of the file, according to a designated scheme.  
 
 The ```N``` number in the predictions file name designates the class number being tested.  It is set in ```/opt/Janus/WM/python3/main-test.py``` with the ```value``` python variable near the end of the file.  Each of the 30 classes (0-29) should be tested to produce different output files.
 
 Each output file contains the image file name, the correct classification, and the predicted classification.  The columns can be tabulated and analyzed with MS Excel statistical functions.  A good target for accuracy should be >95% for each class.
 
+## Limited Operational Testing
+
+Operational testing can be performed on a properly setup Raspberry Pi to verify functionality of the image capture, image processing, prediction, and transmission toolchains.  
+
+### Test Image Capture and Processing Only
+
+To test the image and capture toolchains, open ```/opt/Janus/WM/config/capture.ini``` file and make the following changes:
+
+```
+## The numerical settings in this file represent minutes
+
+[Capture_Settings]
+execution_interval = 5
+image_capture_freq = 1			# Set this to 1 to enable a single, immediate capture
+
+[Prediction_Settings]
+prediction_enable = False		# Set this to False to disable tensorflow
+last_prediction_freq = 15
+prediction_history_freq = 1440
+
+[Image_Transmission]
+original_freq = 0			# Set all entries here to 0 to prevent placement into transmission queue
+scale_freq = 0
+screws_freq = 0
+grotated_freq = 0
+frotated_freq = 0
+rectangled_freq = 0
+windowed_freq = 0
+inverted_freq = 0
+contoured_freq = 0
+digits_freq = 0
+prediction_freq = 0
+overlaid_freq = 0
+
+[Image_Retention]
+original = True				# Set all these to True to retain images for inspection
+scale = True
+screws = True
+grotated = True
+frotated = True
+rectangled = True
+windowed = True
+inverted = True
+contoured = True
+digits = True
+prediction = True
+overlaid = True
+```
+
+The ```image_capture_freq``` setting, when set to ```1``` enables a single capture process which will run immediately during program execution.  At the end of execution it will be reset to ```0```.
+
+### Test Prediction Toolchain
+
+To test the prediction toolchain set the ```prediction_enable``` setting to ```True``` in the ```/opt/Janus/WM/config/capture.ini```.  The results of this prediction will be placed in three locations: 
+
+1.  Overlaid image in ```/opt/Janus/WM/data/images/12--overlaid/olay_YYYY-MM-DD_HHMM_nnnnnnn.jpg``` (if ```overlaid``` is set to ```True``` in the ```/opt/Janus/WM/config/capture.ini``` file).
+2.  A single entry in ```/opt/Janus/WM/data/latest/last_YYYY-MM-DD_nnnnnnn.txt```
+3.  The last entry in ```/opt/Janus/WM/data/history/hist_YYYY-MM-DD.txt```
+
+### Test Execution
+
+Open terminal and execute BASH code: 
+
+```
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-capture.py
+```
+
+### Test Transmission Toolchain
+
+Transmission takes place when items are placed in the transmission queue ```/opt/Janus/WM/data/transmit```.  Each item is removed after successful transmission.  The test involves two parts:
+
+1.  Successfully place selected items in the transmission queue
+2.  Successfully transmit and delete items in the transmission queue
 
 
+First, open ```/opt/Janus/WM/config/capture.ini``` file and make the following changes:
+
+```
+## The numerical settings in this file represent minutes
+
+[Capture_Settings]
+execution_interval = 5
+image_capture_freq = 1			# Set this to 1 to enable a single, immediate capture
+
+[Prediction_Settings]
+prediction_enable = True		# Set this to True to enable tensorflow
+last_prediction_freq = 1		# Set this entry to 1 to immediately place into transmission queue
+prediction_history_freq = 1		# Set this entry to 1 to immediately place into transmission queue
+
+[Image_Transmission]
+original_freq = 1			# Set all entries here to 1 to immediately place into transmission queue
+scale_freq = 1
+screws_freq = 1
+grotated_freq = 1
+frotated_freq = 1
+rectangled_freq = 1
+windowed_freq = 1
+inverted_freq = 1
+contoured_freq = 1
+digits_freq = 1
+prediction_freq = 1
+overlaid_freq = 1
+
+[Image_Retention]
+original = True				# Set all these to True to retain images for inspection
+scale = True
+screws = True
+grotated = True
+frotated = True
+rectangled = True
+windowed = True
+inverted = True
+contoured = True
+digits = True
+prediction = True
+overlaid = True
+```
+
+The various settings, when set to ```1``` enables a process to run immediately during program execution.  At the end of execution each will be reset to ```0```.  
+
+Next, open terminal and execute BASH code: 
+
+```
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-capture.py
+```
+
+After this runs, the transmit queue should be examined to determine the presence of all the image files and two text files, as marked in the settings file above, totaling several MB in disk space.  The actual transmission test does not require the presence of all these files; therefore, the operator can delete the larger files to conserve transmission data use.
+
+Once unwanted files have been deleted, open ```/opt/Janus/WM/python3/config/transmit.py``` file and verify the settings in the ```self.gprs_cfg_dict``` python dictionary are correct:
+
+```
+self.gprs_cfg_dict = {
+    'sock': 'fast.t-mobile.com',
+    'addr': '198.13.81.243',
+    'port': 4440,
+    'attempts': self.config.getint(
+	'Cellular_Configuration',
+	'transmission_attempts'
+    )
+}
+```
+
+The number of transmission attempts (in the event of transmission error) is set in ```/opt/Janus/WM/config/transmit.ini``` with the ```transmission_attempts``` setting.
+
+
+After verification, open terminal and execute BASH code: 
+
+```
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-transmit.py
+```
+
+Transmission progress will be piped to stdout and each file will be removed from the transmit queue after successful transmission.
+
+## Operational Execution
+
+For testing the various settings in the ```/opt/Janus/WM/config/capture.ini``` were set to ```1``` with the expectation that each setting thus set will be reverted to a ```0``` after execution.  For operational execution the ```execution_interval``` must be set to ```5``` or greater--**highly recommended to use multiples of 5**.  All other settings must be a multiple of the ```execution_interval```, as suggested below.  Only settings of ```1``` are reset to ```0```, so these settings will be preserved during execution.
+
+```
+[Capture_Settings]
+execution_interval = 5			# Runs the script every 5 minutes as CRON job
+image_capture_freq = 15			# Captures image every 15 minutes
+
+[Prediction_Settings]
+prediction_enable = True		# Enables TensorFlow predictions
+last_prediction_freq = 15		# Places prediction in transmission queue every 15 minutes (after capture)
+prediction_history_freq = 1440		# Places prediction history in transmission queue every 1440 minutes (24 hours)
+
+[Image_Transmission]
+original_freq = 0			# Do not transmit these images
+scale_freq = 0
+screws_freq = 0
+grotated_freq = 0
+frotated_freq = 0
+rectangled_freq = 0
+windowed_freq = 0
+inverted_freq = 0
+contoured_freq = 0
+digits_freq = 0
+prediction_freq = 0
+overlaid_freq = 240			# Places this image in transmission queue every 240 minutes (4 hours)
+
+[Image_Retention]
+original = True				# Retain all these images
+scale = True
+screws = True
+grotated = True
+frotated = True
+rectangled = True
+windowed = True
+inverted = True
+contoured = True
+digits = True
+prediction = True
+overlaid = True
+```
+
+There are only a couple of settings for transmission in the ```/opt/Janus/WM/config/capture.ini```:
+
+```
+[Transmit_Settings]
+# All frequencies specified in this file must be a
+# multiple of this number
+# Choices are must be 60, 120, 180, 240, 360, 480, 720, 1440
+execution_interval = 60
+
+[Update_Settings]
+# Image capture frequency in minutes, 
+# 60-1440 = minute intervals to update in 60 min increments
+update_freq = 1440
+
+# Cellular modem settings
+[Cellular_Configuration]
+transmission_attempts = 3
+```
+
+The ```execution_interval``` is set at 60-minute intervals.  During operataional execution, the CRON job will execute this program 5 minutes after the hour to prevent using processor resources when the image capture and prediction program executes on the hour.  
+
+The ```update_freq``` is not used in this version of the program.  In the event of transmission failure, the ```transmission_attempts``` can be set to any number 1 or above.  
+
+When the above settings are made, open terminal and execute BASH code to begin operation: 
+
+```
+pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/januswm.py
+```
+
+This sets two tasks in a CRON table: ```main-capture.py``` and ```main-transmit.py```.  They can be viewed at any time by opening a terminal and executing BASH code:
+
+
+```
+pi@raspberrypi:~$ crontab -l
+```
+
+To stop execution, open terminal and execute BASH code:
+
+
+```
+pi@raspberrypi:~$ crontab -r
+```
 
