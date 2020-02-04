@@ -65,6 +65,8 @@ After downloading the code, create the following additional directory structure 
 	/periodic
 ```
 
+
+
 ## Capture Videos and Convert to Images for TensorFlow Image Classification Model Training
 
 This requires two Raspberry Pis: one with TB6600 stepper motor driver and NEMA 17 stepper motor attached to meter shaft, the other with PiCamera v2 to image meter.  It is important to have smooth and consistent shaft rotation. Then RPI3B+ on the stepper motor rotates the motor much more smoothly than the RPI0W.  Each full rotation of the least significant digit requires approximately 200 main shaft rotations on the meter.
@@ -126,6 +128,8 @@ username@hostname:~$ python3 /opt/Janus/WM/python3/main-train.py
 ```
 7. Cont'd:
    - Resulting JPG images will be located ```/opt/Janus/WM/data/images/00--original/``` directory with file name convention ```orig_YYYY-MM-DD_HHMM_nnnnnnn_sgNNNN.jpg```, where `nnnnnnn` represents an incremental capture sequence, and ```sgNNNN``` represents the video segment number.
+	
+	
 	
 ## Preprocess Converted Images for Training
 
@@ -202,6 +206,8 @@ epochs = 8		  # Max number of epochs to train model
 format = h5		  # Model file format
 ```
 
+
+
 ## Train TensorFlow Inception v4 Model for Image Classification
 
 A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 145,000 training images, training time has been observed to take 18 hours.  More images and larger image sizes will significantly increase training time.  
@@ -239,6 +245,8 @@ At the end of training, final weights and model are saved in ```/opt/Janus/WM/we
 
 During the first epoch of training a data file of both the train and validation images are built in ```/opt/Janus/WM/cache/train``` and ```/opt/Janus/WM/cache/valid```, respectively.  If images are added, changed, or deleted in any fashion, these directories must be emptied prior to re-execution of training.
 
+
+
 ## Images for Model Testing
 
 Prior collecting images for testing, the videos in the ```/opt/Janus/WM/data/images/00--movies``` and ```/opt/Janus/WM/data/images/01--originals``` directories which previously contained the unprocessed training images should be archived to prevent loss.
@@ -246,6 +254,8 @@ Prior collecting images for testing, the videos in the ```/opt/Janus/WM/data/ima
 At this point a decision must be made to collect a new set of images, either in video format or JPG format.  The videos should be processed exactly as those used for training images (see **Capture Videos and Convert to Images for TensorFlow Image Classification Model Training** above).  An image set, if available, which will provide more useful results are images captured in real operations.  
 
 Once JPG images are extracted or chosen, they should be placed in ```/opt/Janus/WM/data/images/01--original``` directory.  File name convention for the images should follow ```orig_YYYY-MM-DD_HHMM_nnnnnnn_sgNNNN.jpg```, where `nnnnnnn` represents an incremental capture sequence, and ```sgNNNN``` represents the video segment number. Use ```sg0001``` for individually captured still images.  A useful linux program to use for bulk renaming operations is ```gprename```.
+
+
 
 ## Preprocess Converted Images for Testing
 
@@ -295,6 +305,8 @@ Intermediate steps executed by Python will produce outputs in ```/opt/Janus/data
 
 For step 3, the images in ```/opt/Janus/WM/data/images/17--test_sifted/dN``` must be visually inspected and copied to directory ```/opt/Janus/WM/data/images/18--test-selected/dN/C```.  Care must be taken to select and copy images into the proper class ```C``` directory.  Misclassifying an image at this stage will result in erroneous accuracy calculations at a later stage--with affects that are not easy to investigate.  The images can be selected and copied in bulk or individually.
 
+
+
 ## Test TensorFlow Inception v4 Model for Image Classification
 
 A dedicated Ubuntu computer with nVidia GPU should be set aside for this step.  With 2,000 training images, testing time has been observed to take 2 hours.  More images will significantly increase testing time.  
@@ -329,6 +341,8 @@ This produces a ```CSV``` file in ```/opt/Janus/WM/data/results``` directory wit
 The ```N``` number in the predictions file name designates the class number being tested.  It is set in ```/opt/Janus/WM/python3/main-test.py``` with the ```value``` python variable near the end of the file.  Each of the 30 classes (0-29) should be tested to produce different output files.
 
 Each output file contains the image file name, the correct classification, and the predicted classification.  The columns can be tabulated and analyzed with MS Excel statistical functions.  A good target for accuracy should be >95% for each class.
+
+
 
 ## Limited Operational Testing
 
@@ -482,6 +496,8 @@ pi@raspberrypi:~$ sudo python3 /opt/Janus/WM/python3/main-transmit.py
 ```
 
 Transmission progress will be piped to stdout and each file will be removed from the transmit queue after successful transmission.
+
+
 
 ## Operational Execution
 
