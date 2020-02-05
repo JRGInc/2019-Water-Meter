@@ -68,7 +68,7 @@ if __name__ == '__main__':
         print(log)
 
     if batch_proc_en_dict['test_model']:
-        value = 8
+        value = 20
         print('Performing predictions for value: {0}'.format(value))
         err_vals_dict['test_model'] = test(
             tf_dict=tf_dict,

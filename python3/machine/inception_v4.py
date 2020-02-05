@@ -1,424 +1,575 @@
 import tensorflow as tf
-from configuration import NUM_CLASSES
+
+# noinspection PyUnresolvedReferences
+from tensorflow.keras import Model
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Activation
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import AveragePooling2D
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import BatchNormalization
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import concatenate
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Conv2D
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Dense
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Dropout
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Flatten
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import Input
+# noinspection PyUnresolvedReferences
+from tensorflow.keras.layers import MaxPooling2D
 
 
-def build_inception_block_a(n):
-    block = tf.keras.Sequential()
-    for _ in range(n):
-        block.add(InceptionBlockA())
-    return block
+def conv_block(
+    data_in,
+    nb_filter: int,
+    size: tuple,
+    padding: str = 'same',
+    strides: int = 1,
+    channel_axis: int = -1
+):
+    x = Conv2D(
+        filters=nb_filter,
+        kernel_size=size,
+        strides=strides,
+        padding=padding
+    )(data_in)
+    x = BatchNormalization(
+        axis=channel_axis
+    )(x)
+    x = Activation(
+        activation=tf.nn.relu
+    )(x)
+
+    return x
 
 
-def build_inception_block_b(n):
-    block = tf.keras.Sequential()
-    for _ in range(n):
-        block.add(InceptionBlockB())
-    return block
+def inception_stem(
+    data_in,
+    channel_axis: int = -1
+):
+    x = conv_block(
+        data_in=data_in,
+        nb_filter=32,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
+    x = conv_block(
+        data_in=x,
+        nb_filter=32,
+        size=(3, 3),
+        padding='valid'
+    )
+    x = conv_block(
+        data_in=x,
+        nb_filter=64,
+        size=(3, 3)
+    )
+
+    x1 = MaxPooling2D(
+        pool_size=3,
+        strides=2,
+        padding='valid'
+    )(x)
+    x2 = conv_block(
+        data_in=x,
+        nb_filter=96,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
+
+    x = concatenate(
+        inputs=[
+            x1,
+            x2
+        ],
+        axis=channel_axis
+    )
+
+    x1 = conv_block(
+        data_in=x,
+        nb_filter=64,
+        size=(1, 1)
+    )
+    x1 = conv_block(
+        data_in=x1,
+        nb_filter=96,
+        size=(3, 3),
+        padding='valid'
+    )
+
+    x2 = conv_block(
+        data_in=x,
+        nb_filter=64,
+        size=(1, 1)
+    )
+    x2 = conv_block(
+        data_in=x2,
+        nb_filter=64,
+        size=(1, 7)
+    )
+    x2 = conv_block(
+        data_in=x2,
+        nb_filter=64,
+        size=(7, 1)
+    )
+    x2 = conv_block(
+        data_in=x2,
+        nb_filter=96,
+        size=(3, 3),
+        padding='valid'
+    )
+
+    x = concatenate(
+        inputs=[
+            x1,
+            x2
+        ],
+        axis=channel_axis
+    )
+
+    x1 = conv_block(
+        data_in=x,
+        nb_filter=192,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
+    x2 = MaxPooling2D(
+        pool_size=3,
+        strides=2,
+        padding='valid'
+    )(x)
+
+    x = concatenate(
+        inputs=[
+            x1,
+            x2
+        ],
+        axis=channel_axis
+    )
+
+    return x
 
 
-def build_inception_block_c(n):
-    block = tf.keras.Sequential()
-    for _ in range(n):
-        block.add(InceptionBlockC())
-    return block
+def inception_a(
+    data_in,
+    channel_axis: int = -1
+):
+    a1 = conv_block(
+        data_in=data_in,
+        nb_filter=96,
+        size=(1, 1)
+    )
+
+    a2 = conv_block(
+        data_in=data_in,
+        nb_filter=64,
+        size=(1, 1)
+    )
+    a2 = conv_block(
+        data_in=a2,
+        nb_filter=96,
+        size=(3, 3)
+    )
+
+    a3 = conv_block(
+        data_in=data_in,
+        nb_filter=64,
+        size=(1, 1)
+    )
+    a3 = conv_block(
+        data_in=a3,
+        nb_filter=96,
+        size=(3, 3)
+    )
+    a3 = conv_block(
+        data_in=a3,
+        nb_filter=96,
+        size=(3, 3)
+    )
+
+    a4 = AveragePooling2D(
+        pool_size=3,
+        strides=1,
+        padding='same'
+    )(data_in)
+    a4 = conv_block(
+        data_in=a4,
+        nb_filter=96,
+        size=(1, 1)
+    )
+
+    m = concatenate(
+        inputs=[
+            a1,
+            a2,
+            a3,
+            a4
+        ],
+        axis=channel_axis
+    )
+
+    return m
 
 
-class BasicConv2D(tf.keras.layers.Layer):
-    def __init__(self, filters, kernel_size, strides, padding):
-        super(BasicConv2D, self).__init__()
-        self.conv = tf.keras.layers.Conv2D(filters=filters,
-                                           kernel_size=kernel_size,
-                                           strides=strides,
-                                           padding=padding)
-        self.bn = tf.keras.layers.BatchNormalization()
+def inception_b(
+    data_in,
+    channel_axis: int = -1
+):
+    b1 = conv_block(
+        data_in=data_in,
+        nb_filter=384,
+        size=(1, 1)
+    )
 
-    def call(self, inputs, training=None, **kwargs):
-        x = self.conv(inputs)
-        x = self.bn(x, training=training)
-        x = tf.nn.relu(x)
+    b2 = conv_block(
+        data_in=data_in,
+        nb_filter=192,
+        size=(1, 1)
+    )
+    b2 = conv_block(
+        data_in=b2,
+        nb_filter=224,
+        size=(1, 7)
+    )
+    b2 = conv_block(
+        data_in=b2,
+        nb_filter=256,
+        size=(7, 1)
+    )
 
-        return x
+    b3 = conv_block(
+        data_in=data_in,
+        nb_filter=192,
+        size=(1, 1)
+    )
+    b3 = conv_block(
+        data_in=b3,
+        nb_filter=192,
+        size=(7, 1)
+    )
+    b3 = conv_block(
+        data_in=b3,
+        nb_filter=224,
+        size=(1, 7)
+    )
+    b3 = conv_block(
+        data_in=b3,
+        nb_filter=224,
+        size=(7, 1)
+    )
+    b3 = conv_block(
+        data_in=b3,
+        nb_filter=256,
+        size=(1, 7)
+    )
 
+    b4 = AveragePooling2D(
+        pool_size=3,
+        strides=1,
+        padding='same'
+    )(data_in)
+    b4 = conv_block(
+        data_in=b4,
+        nb_filter=128,
+        size=(1, 1)
+    )
 
-class Conv2DLinear(tf.keras.layers.Layer):
-    def __init__(self, filters, kernel_size, strides, padding):
-        super(Conv2DLinear, self).__init__()
-        self.conv = tf.keras.layers.Conv2D(filters=filters,
-                                           kernel_size=kernel_size,
-                                           strides=strides,
-                                           padding=padding)
-        self.bn = tf.keras.layers.BatchNormalization()
+    m = concatenate(
+        inputs=[
+            b1,
+            b2,
+            b3,
+            b4
+        ],
+        axis=channel_axis
+    )
 
-    def call(self, inputs, training=None, **kwargs):
-        x = self.conv(inputs)
-        x = self.bn(x, training=training)
-
-        return x
-
-
-class Stem(tf.keras.layers.Layer):
-    def __init__(self):
-        super(Stem, self).__init__()
-        self.conv1 = BasicConv2D(filters=32,
-                                 kernel_size=(3, 3),
-                                 strides=2,
-                                 padding="valid")
-        self.conv2 = BasicConv2D(filters=32,
-                                 kernel_size=(3, 3),
-                                 strides=1,
-                                 padding="valid")
-        self.conv3 = BasicConv2D(filters=64,
-                                 kernel_size=(3, 3),
-                                 strides=1,
-                                 padding="same")
-        self.b1_maxpool = tf.keras.layers.MaxPool2D(pool_size=(3, 3),
-                                                    strides=2,
-                                                    padding="valid")
-        self.b2_conv = BasicConv2D(filters=96,
-                                   kernel_size=(3, 3),
-                                   strides=2,
-                                   padding="valid")
-        self.b3_conv1 = BasicConv2D(filters=64,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=96,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="valid")
-        self.b4_conv1 = BasicConv2D(filters=64,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv2 = BasicConv2D(filters=64,
-                                    kernel_size=(7, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv3 = BasicConv2D(filters=64,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv4 = BasicConv2D(filters=96,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="valid")
-        self.b5_conv = BasicConv2D(filters=192,
-                                   kernel_size=(3, 3),
-                                   strides=2,
-                                   padding="valid")
-        self.b6_maxpool = tf.keras.layers.MaxPool2D(pool_size=(3, 3),
-                                                    strides=2,
-                                                    padding="valid")
-
-    def call(self, inputs, training=None, **kwargs):
-        x = self.conv1(inputs, training=training)
-        x = self.conv2(x, training=training)
-        x = self.conv3(x, training=training)
-        branch_1 = self.b1_maxpool(x)
-        branch_2 = self.b2_conv(x, training=training)
-        x = tf.concat(values=[branch_1, branch_2], axis=-1)
-        branch_3 = self.b3_conv1(x, training=training)
-        branch_3 = self.b3_conv2(branch_3, training=training)
-        branch_4 = self.b4_conv1(x, training=training)
-        branch_4 = self.b4_conv2(branch_4, training=training)
-        branch_4 = self.b4_conv3(branch_4, training=training)
-        branch_4 = self.b4_conv4(branch_4, training=training)
-        x = tf.concat(values=[branch_3, branch_4], axis=-1)
-        branch_5 = self.b5_conv(x, training=training)
-        branch_6 = self.b6_maxpool(x, training=training)
-        x = tf.concat(values=[branch_5, branch_6], axis=-1)
-
-        return x
+    return m
 
 
-class InceptionBlockA(tf.keras.layers.Layer):
-    def __init__(self):
-        super(InceptionBlockA, self).__init__()
-        self.b1_pool = tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
-                                                        strides=1,
-                                                        padding="same")
-        self.b1_conv = BasicConv2D(filters=96,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b2_conv = BasicConv2D(filters=96,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b3_conv1 = BasicConv2D(filters=64,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=96,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv1 = BasicConv2D(filters=64,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv2 = BasicConv2D(filters=96,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv3 = BasicConv2D(filters=96,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="same")
+def inception_c(
+    data_in,
+    channel_axis: int = -1
+):
+    c1 = conv_block(
+        data_in=data_in,
+        nb_filter=256,
+        size=(1, 1)
+    )
 
-    def call(self, inputs, training=None, **kwargs):
-        b1 = self.b1_pool(inputs)
-        b1 = self.b1_conv(b1, training=training)
+    c2 = conv_block(
+        data_in=data_in,
+        nb_filter=384,
+        size=(1, 1)
+    )
+    c2_1 = conv_block(
+        data_in=c2,
+        nb_filter=256,
+        size=(1, 3)
+    )
+    c2_2 = conv_block(
+        data_in=c2,
+        nb_filter=256,
+        size=(3, 1)
+    )
+    c2 = concatenate(
+        inputs=[
+            c2_1,
+            c2_2
+        ],
+        axis=channel_axis
+    )
 
-        b2 = self.b2_conv(inputs, training=training)
+    c3 = conv_block(
+        data_in=data_in,
+        nb_filter=384,
+        size=(1, 1)
+    )
+    c3 = conv_block(
+        data_in=c3,
+        nb_filter=448,
+        size=(3, 1)
+    )
+    c3 = conv_block(
+        data_in=c3,
+        nb_filter=512,
+        size=(1, 3)
+    )
+    c3_1 = conv_block(
+        data_in=c3,
+        nb_filter=256,
+        size=(1, 3)
+    )
+    c3_2 = conv_block(
+        data_in=c3,
+        nb_filter=256,
+        size=(3, 1)
+    )
+    c3 = concatenate(
+        inputs=[
+            c3_1,
+            c3_2
+        ],
+        axis=channel_axis
+    )
 
-        b3 = self.b3_conv1(inputs, training=training)
-        b3 = self.b3_conv2(b3, training=training)
+    c4 = AveragePooling2D(
+        pool_size=3,
+        strides=1,
+        padding='same'
+    )(data_in)
+    c4 = conv_block(
+        data_in=c4,
+        nb_filter=256,
+        size=(1, 1)
+    )
 
-        b4 = self.b4_conv1(inputs, training=training)
-        b4 = self.b4_conv2(b4, training=training)
-        b4 = self.b4_conv3(b4, training=training)
+    m = concatenate(
+        inputs=[
+            c1,
+            c2,
+            c3,
+            c4
+        ],
+        axis=channel_axis
+    )
 
-        return tf.concat(values=[b1, b2, b3, b4], axis=-1)
-
-
-class ReductionA(tf.keras.layers.Layer):
-    def __init__(self, k, l, m, n):
-        super(ReductionA, self).__init__()
-        self.b1_pool = tf.keras.layers.MaxPool2D(pool_size=(3, 3),
-                                                 strides=2,
-                                                 padding="valid")
-        self.b2_conv = BasicConv2D(filters=n,
-                                   kernel_size=(3, 3),
-                                   strides=2,
-                                   padding="valid")
-        self.b3_conv1 = BasicConv2D(filters=k,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=l,
-                                    kernel_size=(3, 3),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv3 = BasicConv2D(filters=m,
-                                    kernel_size=(3, 3),
-                                    strides=2,
-                                    padding="valid")
-
-    def call(self, inputs, training=None, **kwargs):
-        b1 = self.b1_pool(inputs)
-
-        b2 = self.b2_conv(inputs, training=training)
-
-        b3 = self.b3_conv1(inputs, training=training)
-        b3 = self.b3_conv2(b3, training=training)
-        b3 = self.b3_conv3(b3, training=training)
-
-        return tf.concat(values=[b1, b2, b3], axis=-1)
-
-
-class InceptionBlockB(tf.keras.layers.Layer):
-    def __init__(self):
-        super(InceptionBlockB, self).__init__()
-        self.b1_pool = tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
-                                                        strides=1,
-                                                        padding="same")
-        self.b1_conv = BasicConv2D(filters=128,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b2_conv = BasicConv2D(filters=384,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b3_conv1 = BasicConv2D(filters=192,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=224,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv3 = BasicConv2D(filters=256,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv1 = BasicConv2D(filters=192,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv2 = BasicConv2D(filters=192,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv3 = BasicConv2D(filters=224,
-                                    kernel_size=(7, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv4 = BasicConv2D(filters=224,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv5 = BasicConv2D(filters=256,
-                                    kernel_size=(7, 1),
-                                    strides=1,
-                                    padding="same")
-
-    def call(self, inputs, training=None, **kwargs):
-        b1 = self.b1_pool(inputs)
-        b1 = self.b1_conv(b1, training=training)
-
-        b2 = self.b2_conv(inputs, training=training)
-
-        b3 = self.b3_conv1(inputs, training=training)
-        b3 = self.b3_conv2(b3, training=training)
-        b3 = self.b3_conv3(b3, training=training)
-
-        b4 = self.b4_conv1(inputs, training=training)
-        b4 = self.b4_conv2(b4, training=training)
-        b4 = self.b4_conv3(b4, training=training)
-        b4 = self.b4_conv4(b4, training=training)
-        b4 = self.b4_conv5(b4, training=training)
-
-        return tf.concat(values=[b1, b2, b3, b4], axis=-1)
+    return m
 
 
-class ReductionB(tf.keras.layers.Layer):
-    def __init__(self):
-        super(ReductionB, self).__init__()
-        self.b1_pool = tf.keras.layers.MaxPool2D(pool_size=(3, 3),
-                                                 strides=2,
-                                                 padding="valid")
-        self.b2_conv1 = BasicConv2D(filters=192,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b2_conv2 = BasicConv2D(filters=192,
-                                    kernel_size=(3, 3),
-                                    strides=2,
-                                    padding="valid")
-        self.b3_conv1 = BasicConv2D(filters=256,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=256,
-                                    kernel_size=(1, 7),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv3 = BasicConv2D(filters=320,
-                                    kernel_size=(7, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv4 = BasicConv2D(filters=320,
-                                    kernel_size=(3, 3),
-                                    strides=2,
-                                    padding="valid")
+def reduction_a(
+    data_in,
+    channel_axis: int = -1
+):
+    r1 = conv_block(
+        data_in=data_in,
+        nb_filter=384,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
 
-    def call(self, inputs, training=None, **kwargs):
-        b1 = self.b1_pool(inputs)
+    r2 = conv_block(
+        data_in=data_in,
+        nb_filter=192,
+        size=(1, 1)
+    )
+    r2 = conv_block(
+        data_in=r2,
+        nb_filter=224,
+        size=(3, 3)
+    )
+    r2 = conv_block(
+        data_in=r2,
+        nb_filter=256,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
 
-        b2 = self.b2_conv1(inputs, training=training)
-        b2 = self.b2_conv2(b2, training=training)
+    r3 = MaxPooling2D(
+        pool_size=3,
+        strides=2,
+        padding='valid'
+    )(data_in)
 
-        b3 = self.b3_conv1(inputs, training=training)
-        b3 = self.b3_conv2(b3, training=training)
-        b3 = self.b3_conv3(b3, training=training)
-        b3 = self.b3_conv4(b3, training=training)
+    m = concatenate(
+        inputs=[
+            r1,
+            r2,
+            r3
+        ], axis=channel_axis
+    )
 
-        return tf.concat(values=[b1, b2, b3], axis=-1)
-
-
-class InceptionBlockC(tf.keras.layers.Layer):
-    def __init__(self):
-        super(InceptionBlockC, self).__init__()
-        self.b1_pool = tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
-                                                        strides=1,
-                                                        padding="same")
-        self.b1_conv = BasicConv2D(filters=256,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b2_conv = BasicConv2D(filters=256,
-                                   kernel_size=(1, 1),
-                                   strides=1,
-                                   padding="same")
-        self.b3_conv1 = BasicConv2D(filters=384,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv2 = BasicConv2D(filters=256,
-                                    kernel_size=(1, 3),
-                                    strides=1,
-                                    padding="same")
-        self.b3_conv3 = BasicConv2D(filters=256,
-                                    kernel_size=(3, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv1 = BasicConv2D(filters=384,
-                                    kernel_size=(1, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv2 = BasicConv2D(filters=448,
-                                    kernel_size=(1, 3),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv3 = BasicConv2D(filters=512,
-                                    kernel_size=(3, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv4 = BasicConv2D(filters=256,
-                                    kernel_size=(3, 1),
-                                    strides=1,
-                                    padding="same")
-        self.b4_conv5 = BasicConv2D(filters=256,
-                                    kernel_size=(1, 3),
-                                    strides=1,
-                                    padding="same")
-
-    def call(self, inputs, training=None, **kwargs):
-        b1 = self.b1_pool(inputs)
-        b1 = self.b1_conv(b1, training=training)
-
-        b2 = self.b2_conv(inputs, training=training)
-
-        b3 = self.b3_conv1(inputs, training=training)
-        b3_1 = self.b3_conv2(b3, training=training)
-        b3_2 = self.b3_conv3(b3, training=training)
-
-        b4 = self.b4_conv1(inputs, training=training)
-        b4 = self.b4_conv2(b4, training=training)
-        b4 = self.b4_conv3(b4, training=training)
-        b4_1 = self.b4_conv4(b4, training=training)
-        b4_2 = self.b4_conv5(b4, training=training)
-
-        return tf.concat(values=[b1, b2, b3_1, b3_2, b4_1, b4_2], axis=-1)
+    return m
 
 
-class InceptionV4(tf.keras.Model):
-    def __init__(self):
-        super(InceptionV4, self).__init__()
-        self.stem = Stem()
-        self.inception_a = build_inception_block_a(4)
-        self.reduction_a = ReductionA(k=192, l=224, m=256, n=384)
-        self.inception_b = build_inception_block_b(7)
-        self.reduction_b = ReductionB()
-        self.inception_c = build_inception_block_c(3)
-        self.avgpool = tf.keras.layers.AveragePooling2D(pool_size=(8, 8))
-        self.dropout = tf.keras.layers.Dropout(rate=0.2)
-        self.flat = tf.keras.layers.Flatten()
-        self.fc = tf.keras.layers.Dense(units=NUM_CLASSES,
-                                        activation=tf.keras.activations.softmax)
+def reduction_b(
+    data_in,
+    channel_axis: int = -1
+):
+    r1 = conv_block(
+        data_in=data_in,
+        nb_filter=192,
+        size=(1, 1)
+    )
+    r1 = conv_block(
+        data_in=r1,
+        nb_filter=192,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
 
-    def call(self, inputs, training=True, mask=None):
-        x = self.stem(inputs, training=training)
-        x = self.inception_a(x, training=training)
-        x = self.reduction_a(x, training=training)
-        x = self.inception_b(x, training=training)
-        x = self.reduction_b(x, training=training)
-        x = self.inception_c(x, training=training)
-        x = self.avgpool(x)
-        x = self.dropout(x, training=training)
-        x = self.flat(x)
-        x = self.fc(x)
+    r2 = conv_block(
+        data_in=data_in,
+        nb_filter=256,
+        size=(1, 1)
+    )
+    r2 = conv_block(
+        data_in=r2,
+        nb_filter=256,
+        size=(1, 7)
+    )
+    r2 = conv_block(
+        data_in=r2,
+        nb_filter=320,
+        size=(7, 1)
+    )
+    r2 = conv_block(
+        data_in=r2,
+        nb_filter=320,
+        size=(3, 3),
+        strides=2,
+        padding='valid'
+    )
 
-        return x
+    r3 = MaxPooling2D(
+        pool_size=3,
+        strides=2,
+        padding='valid'
+    )(data_in)
+
+    m = concatenate(
+        inputs=[
+            r1,
+            r2,
+            r3
+        ],
+        axis=channel_axis
+    )
+    return m
+
+
+def create_inception_v4(
+    tf_dict: dict
+):
+    """
+    Creates a inception v4 network
+
+    :param tf_dict: dict
+
+    :return: Keras Model with 1 input and 1 output
+    """
+
+    init = Input(batch_shape=(
+        tf_dict['batch_size'],
+        tf_dict['img_tgt_width'],
+        tf_dict['img_tgt_height'],
+        tf_dict['nbr_channels']
+    ))
+
+    channel_axis = -1
+
+    # Input Shape is 299 x 299 x 3 (tf) or 3 x 299 x 299 (th)
+    # training = False
+    x = inception_stem(
+        data_in=init,
+        channel_axis=channel_axis
+    )
+
+    # 4 x Inception A
+    for i in range(4):
+        x = inception_a(
+            data_in=x,
+            channel_axis=channel_axis
+        )
+
+    # Reduction A
+    x = reduction_a(
+        data_in=x,
+        channel_axis=channel_axis
+    )
+
+    # 7 x Inception B
+    for i in range(7):
+        x = inception_b(
+            data_in=x,
+            channel_axis=channel_axis
+        )
+
+    # Reduction B
+    x = reduction_b(
+        data_in=x,
+        channel_axis=channel_axis
+    )
+
+    # 3 x Inception C
+    for i in range(3):
+        x = inception_c(
+            data_in=x,
+            channel_axis=channel_axis
+        )
+
+    # Average Pooling
+    x = AveragePooling2D(
+        pool_size=8
+    )(x)
+
+    # Dropout
+    x = Dropout(
+        rate=0.2
+    )(x)
+    x = Flatten()(x)
+
+    # Output
+    out = Dense(
+        units=tf_dict['nbr_classes'],
+        activation=tf.nn.softmax
+    )(x)
+
+    model = Model(
+        inputs=init,
+        outputs=out,
+        name='Inception-v4'
+    )
+
+    return model

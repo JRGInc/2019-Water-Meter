@@ -21,8 +21,8 @@ class CoreCfg(object):
         """
         self.base_dir = os.path.dirname('/opt/Janus/WM/')
 
-        self.train_version = '018'
-        self.test_version = '004'
+        self.train_version = '019'
+        self.test_version = '001'
         self.test_set = '005'
 
         # Define core paths
@@ -279,7 +279,7 @@ class CoreCfg(object):
             'sift_train_digits': False,
             'shift_train_digits': False,
             'split_dataset': False,
-            'train_model': True,
+            'train_model': False,
             'build_test_images': False,
             'sift_test_digits': False,
             'save_test_digits': False,

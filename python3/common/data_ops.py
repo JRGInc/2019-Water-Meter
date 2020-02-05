@@ -126,12 +126,7 @@ def sift_digits(
             )
             img_orig_core_name = str(img_orig_name.split(sep='.')[0])
 
-            digit = ''
-            if mode_str == 'train':
-                digit = img_orig_core_name.split(sep='_')[1]
-            elif mode_str == 'test':
-                digit = img_orig_core_name.split(sep='_')[4]
-
+            digit = img_orig_core_name.split(sep='_')[1]
             sift_dest_path = os.path.join(
                 sift_path,
                 digit

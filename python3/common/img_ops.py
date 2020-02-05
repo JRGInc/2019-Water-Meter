@@ -67,6 +67,8 @@ def scale(
                 )
             elif img_orig_h == 1080:
                 pass
+            elif img_orig_h == 1536:
+                pass
             elif img_orig_h == 2464:
                 pass
 
@@ -164,6 +166,13 @@ def find_screws(
                     'brx': 1350,
                     'bry': int(img_scale_h / 2) + 200
                 }
+            elif img_orig_h == 1536:
+                img_crop_dict = {
+                    'ulx': 675,
+                    'uly': int(img_scale_h / 2) - 150,
+                    'brx': 1265,
+                    'bry': int(img_scale_h / 2) + 100
+                }
             elif img_orig_h == 2464:
                 img_crop_dict = {
                     'ulx': 1075,
@@ -186,16 +195,30 @@ def find_screws(
                 ksize=5
             )
 
-            circles = cv2.HoughCircles(
-                image=img_blur,
-                method=cv2.HOUGH_GRADIENT,
-                dp=1.0,
-                minDist=300,
-                param1=100,
-                param2=30,
-                minRadius=30,
-                maxRadius=90
-            )
+            circles = None
+
+            if img_orig_h == 1536:
+                circles = cv2.HoughCircles(
+                    image=img_blur,
+                    method=cv2.HOUGH_GRADIENT,
+                    dp=2.5,
+                    minDist=200,
+                    param1=100,
+                    param2=20,
+                    minRadius=20,
+                    maxRadius=60
+                )
+            elif img_orig_h == 2464:
+                circles = cv2.HoughCircles(
+                    image=img_blur,
+                    method=cv2.HOUGH_GRADIENT,
+                    dp=1.0,
+                    minDist=300,
+                    param1=100,
+                    param2=30,
+                    minRadius=30,
+                    maxRadius=90
+                )
 
             if circles is not None:
                 for circle in range(0, len(circles[0])):
@@ -236,7 +259,7 @@ def find_screws(
                         img_screw_list[4] = [int(i) for i in circles[0][circle].tolist()]
                     else:
                         if circles[0][circle][2] > radius:
-                            radius = circles[0][circle][0]
+                            radius = circles[0][circle][2]
                             img_screw_list[4] = [int(i) for i in circles[0][circle].tolist()]
 
                     # copy grayed image to edges folder than perform this step to save image with overlaid lines,
@@ -380,6 +403,7 @@ def rotate(
             img_orig = cv2.imread(filename=img_orig_url)
             img_orig_h = img_orig.shape[0]
             img_orig_w = img_orig.shape[1]
+
             m_grotd = cv2.getRotationMatrix2D(
                 center=(
                     img_screw_list[4][0],
@@ -407,17 +431,28 @@ def rotate(
             logger.info(msg=log)
             print(log)
 
-            img_crop_dict = {
-                'ulx': img_screw_list[4][0] - 390,
-                'uly': img_screw_list[4][1] + 140,
-                'brx': img_screw_list[4][0] + 390,
-                'bry': img_screw_list[4][1] + 330
-            }
+            img_crop_dict = None
+            if img_orig_h == 1536:
+                img_crop_dict = {
+                    'ulx': img_screw_list[4][0] - 240,
+                    'uly': img_screw_list[4][1] + 100,
+                    'brx': img_screw_list[4][0] + 240,
+                    'bry': img_screw_list[4][1] + 190
+                }
+            elif img_orig_h == 2464:
+                img_crop_dict = {
+                    'ulx': img_screw_list[4][0] - 390,
+                    'uly': img_screw_list[4][1] + 140,
+                    'brx': img_screw_list[4][0] + 390,
+                    'bry': img_screw_list[4][1] + 330
+                }
+
             img_rect = img_grotd[
                 img_crop_dict['uly']:img_crop_dict['bry'],
                 img_crop_dict['ulx']:img_crop_dict['brx']
             ]
             img_h = img_rect.shape[0]
+
             img_gray = cv2.cvtColor(
                 src=img_rect,
                 code=cv2.COLOR_BGR2GRAY
@@ -431,13 +466,24 @@ def rotate(
 
             l_lower = 0
             r_lower = 0
+
+            left = 0
+            right = 0
+
+            if img_orig_h == 1536:
+                left = 75
+                right = 405
+            elif img_orig_h == 2464:
+                left = 150
+                right = 600
+
             for y_pix in range((img_h - 1), 0, -1):
-                if img_thresh[y_pix][150] == 255:
+                if img_thresh[y_pix][left] == 255:
                     l_lower = y_pix
                     break
 
             for y_pix in range((img_h - 1), 0, -1):
-                if img_thresh[y_pix][600] == 255:
+                if img_thresh[y_pix][right] == 255:
                     r_lower = y_pix
                     break
 
@@ -570,7 +616,8 @@ def crop_rect(
                     break
 
             for y_pix in range((img_rotd_h - 1), 0, -1):
-                if img_thresh[y_pix][int(img_rotd_w / 2)] == 255:
+                if (img_thresh[y_pix][int(img_rotd_w / 2)] == 255) and \
+                        (img_thresh[y_pix - 5][int(img_rotd_w / 2)] == 255):
                     lower = y_pix
                     break
 
@@ -593,9 +640,9 @@ def crop_rect(
             logger.info(msg=log)
             print(log)
 
-            ulx0 = left + 2
-            uly0 = upper + 3
-            brx0 = right - 26  # Crop off non-moving bushing from right edge
+            ulx0 = left + 1
+            uly0 = upper + 2
+            brx0 = right - 23  # Crop off non-moving bushing from right edge
             bry0 = lower - 1
             img_h = bry0 - uly0
 
@@ -625,30 +672,30 @@ def crop_rect(
             # If Image height is less than tensor flow requirements, pad the upper edge
             # with sufficient rows to create proper sized digit image and add one row
             # to bottom edge.
-            if img_h < tf_lower:
-                top = tf_lower - img_h
-                img_digw = cv2.copyMakeBorder(
-                    src=img_digw,
-                    top=top,
-                    bottom=0,
-                    left=0,
-                    right=0,
-                    borderType=cv2.BORDER_CONSTANT,
-                    value=(0, 0, 0)
-                )
-                img_digw = cv2.copyMakeBorder(
-                    src=img_digw,
-                    top=0,
-                    bottom=1,
-                    left=0,
-                    right=0,
-                    borderType=cv2.BORDER_REPLICATE
-                )
-
-                log = 'Added {0} rows to top and 1 row to bottom of {1}.'. \
-                    format(top, img_digw_url)
-                logger.info(msg=log)
-                print(log)
+            # if img_h < tf_lower:
+            #     top = tf_lower - img_h
+            #     img_digw = cv2.copyMakeBorder(
+            #         src=img_digw,
+            #         top=top,
+            #         bottom=0,
+            #         left=0,
+            #         right=0,
+            #         borderType=cv2.BORDER_CONSTANT,
+            #         value=(0, 0, 0)
+            #     )
+            #     img_digw = cv2.copyMakeBorder(
+            #         src=img_digw,
+            #         top=0,
+            #         bottom=1,
+            #         left=0,
+            #         right=0,
+            #         borderType=cv2.BORDER_REPLICATE
+            #     )
+            #
+            #     log = 'Added {0} rows to top and 1 row to bottom of {1}.'. \
+            #         format(top, img_digw_url)
+            #     logger.info(msg=log)
+            #     print(log)
 
             cv2.imwrite(
                 filename=img_digw_url,
@@ -767,8 +814,9 @@ def crop_digits(
     """
     img_digs_err = False
 
-    img_upper = tf_dict['shadow']
-    img_lower = tf_dict['shadow'] + tf_dict['height']
+    # img_upper = tf_dict['shadow']
+    img_upper = 0
+    # img_lower = tf_dict['shadow'] + tf_dict['height']
     if mode_str == 'train':
         if (tf_dict['full_width'] % 2) == 0:
             img_left = int(tf_dict['full_width'] / 2)
@@ -793,6 +841,7 @@ def crop_digits(
 
         try:
             img_h = img_digw.shape[0]
+            img_lower = img_h - 1
             img_w = img_digw.shape[1]
             dig_w = int(img_w / 6)
             dig_w_ctr = int(dig_w / 2)
@@ -926,18 +975,20 @@ def crop_digits(
                     elif cnt_ctr < dig_w_ctr:
                         cnt_ctr = cnt_x + cnt_w - 24
 
-                left = cnt_ctr - img_left
-                right = cnt_ctr + img_right
+                # left = cnt_ctr - img_left
+                # right = cnt_ctr + img_right
+                left = cnt_x - 2
+                right = cnt_x + cnt_w + 2
 
                 # if contour is erroneously left-shifted
                 if left < 0:
-                    left = dig_w_ctr - img_left
-                    right = dig_w_ctr + img_right
+                    left = 0
+                    # right = dig_w_ctr + img_right
 
                 # if contour is erroneously right-shifted
                 elif right >= dig_w:
-                    left = dig_w_ctr - img_left
-                    right = dig_w_ctr + img_right
+                    # left = dig_w_ctr - img_left
+                    right = dig_w - 1
 
                 log = 'Digit {0} tensor flow adjusted horizontal boundaries '.format(digit) +\
                     'are: {0}, {1}, and {2} (left, center, right).'.format(left, cnt_ctr, right)
@@ -978,7 +1029,17 @@ def crop_digits(
                         ]
                     )
 
-                if mode_str == 'pred':
+                elif mode_str == 'test':
+                    cv2.imwrite(
+                        filename=img_dig_url,
+                        img=img_dig_gray[img_upper:img_lower, left:right],
+                        params=[
+                            int(cv2.IMWRITE_JPEG_QUALITY),
+                            100
+                        ]
+                    )
+
+                elif mode_str == 'pred':
                     cv2.imwrite(
                         filename=img_tdig_url,
                         img=img_dig_gray[img_upper:img_lower, left:right],

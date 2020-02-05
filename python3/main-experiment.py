@@ -399,23 +399,22 @@ if __name__ == '__main__':
                 cam_cfg_dict['encoding'] = 'jpg'
                 print(cam_cfg_dict)
 
-                img_orig_name = img_orig_dtg + '_pc_' + 'md' + str(cam_cfg_dict['mode']) + '_' + \
-                    str(cam_cfg_dict['width']) + 'x' + str(cam_cfg_dict['height'])
-                img_orig_url = os.path.join(
-                    img_path_dict['orig'],
-                    img_orig_name
-                )
-                img_screw_url = os.path.join(
-                    img_path_dict['orig'],
-                    img_orig_name
-                )
-
-                img_orig_url += '_q100.jpg'
-                print(img_orig_url)
-
-                img_jpg_url = img_orig_url
-
                 for qual in range(0, len(qualities)):
+                    print('IMAGE QUALITY: {0}'.format(qualities[qual]))
+
+                    img_orig_name = img_orig_dtg + '_pc_' + 'md' + str(cam_cfg_dict['mode']) + '_' + \
+                        str(cam_cfg_dict['width']) + 'x' + str(cam_cfg_dict['height'])
+                    if qualities[qual] < 100:
+                        img_orig_name += '_q0' + str(qualities[qual]) + '.jpg'
+                    else:
+                        img_orig_name += '_q' + str(qualities[qual]) + '.jpg'
+
+                    img_orig_url = os.path.join(
+                        img_path_dict['orig'],
+                        img_orig_name
+                    )
+                    print(img_orig_url)
+
                     timea = ttime.time()
                     img_orig, err_img_orig = picamera.snap_shot(
                         sw_mode='pc',
@@ -424,22 +423,16 @@ if __name__ == '__main__':
                         led_set_dict=led_set_dict,
                         cam_cfg_dict=cam_cfg_dict,
                         img_orig_url=img_orig_url,
-                        img_orig_qual=100
+                        img_orig_qual=qualities[qual]
                     )
 
                     if qualities[qual] <= 90:
-
-                        img_jpg_url_base_noext = str(img_orig_url.split(sep='.')[0])
-                        img_jpg_url_file = img_jpg_url_base_noext + '_pil_q0' + \
-                            str(qualities[qual]) + '.jpg'
-                        img_jpg_url = os.path.join(img_path_dict['orig'], img_jpg_url_file)
-                        print(img_jpg_url)
 
                         img_xmit_err = picamera.copy_image(
                             img_orig_stream=img_orig,
                             err_xmit_url=err_xmit_url,
                             img_orig_url=img_orig_url,
-                            img_dest_url=img_jpg_url,
+                            img_dest_url=img_orig_url,
                             img_dest_qual=qualities[qual],
                         )
 
@@ -448,7 +441,7 @@ if __name__ == '__main__':
                     print('JPG Image capture time elapsed: {0} sec'.format(time_elapse))
                     print('\n\n')
 
-                    data_in = [img_jpg_url, time_elapse]
+                    data_in = [img_orig_url, time_elapse]
                     file_ops.f_request(
                         file_cmd='file_csv_appendlist',
                         file_name=test_url_str,

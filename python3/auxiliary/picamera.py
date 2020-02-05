@@ -142,32 +142,32 @@ def snap_shot(
                     camera.saturation = cam_cfg_dict['saturation']
                     camera.rotation = cam_cfg_dict['rotation']
                     camera.exposure_mode = cam_cfg_dict['exposure']
-                    if img_orig_qual == 100:
-                        if str(cam_cfg_dict['encoding']) == 'png':
-                            camera.capture(
-                                output=img_orig_url,
-                                format='png'
-                            )
-                        elif str(cam_cfg_dict['encoding']) == 'jpg':
-                            camera.capture(
-                                output=img_orig_url,
-                                format='jpeg',
-                                quality=img_orig_qual
-                            )
-                    elif img_orig_qual <= 100:
-                        img_orig = BytesIO()
-                        if str(cam_cfg_dict['encoding']) == 'png':
-                            camera.capture(
-                                output=img_orig,
-                                format='png'
-                            )
-                        elif str(cam_cfg_dict['encoding']) == 'jpg':
-                            camera.capture(
-                                output=img_orig,
-                                format='jpeg',
-                                quality=img_orig_qual
-                            )
-                        img_orig.seek(0)
+                    # if img_orig_qual == 100:
+                    #     if str(cam_cfg_dict['encoding']) == 'png':
+                    #         camera.capture(
+                    #             output=img_orig_url,
+                    #             format='png'
+                    #         )
+                    #     elif str(cam_cfg_dict['encoding']) == 'jpg':
+                    #         camera.capture(
+                    #             output=img_orig_url,
+                    #             format='jpeg',
+                    #             quality=100
+                    #         )
+                    # elif img_orig_qual <= 100:
+                    img_orig = BytesIO()
+                    if str(cam_cfg_dict['encoding']) == 'png':
+                        camera.capture(
+                            output=img_orig,
+                            format='png'
+                        )
+                    elif str(cam_cfg_dict['encoding']) == 'jpg':
+                        camera.capture(
+                            output=img_orig,
+                            format='jpeg',
+                            quality=100
+                        )
+                    img_orig.seek(0)
 
                     camera.close()
                     break
@@ -310,7 +310,7 @@ def copy_image(
                 )
 
         if not img_copy_err:
-            img_orig = img_orig.convert('RGB')
+            img_orig = img_orig.crop(box=(0, 0, 740, 740))
             img_orig.save(
                 fp=img_dest_url,
                 format='jpeg',

@@ -6,7 +6,6 @@ import logging
 import os
 import time
 from common import img_ops
-from config.capture import CaptureCfg
 from config.core import CoreCfg
 from config.tensor import TensorCfg
 
@@ -27,7 +26,6 @@ def process_images(
     timea = time.time()
 
     core_cfg = CoreCfg()
-    capture_cfg = CaptureCfg(core_cfg=core_cfg)
     tensor_cfg = TensorCfg(core_cfg=core_cfg)
 
     # Error values dictionary

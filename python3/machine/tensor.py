@@ -212,7 +212,7 @@ def train(
 
 def test(
     tf_dict: dict,
-    value: str,
+    value: str
 ):
     """
     Tests Tensor Flow model
