@@ -4,11 +4,10 @@ __company__ = 'Janus Research'
 
 # Initialize Application processes
 if __name__ == '__main__':
+    import time
+    from common import stepper
 
-	import time
-	from tb6600 import stepper
-	
-	
-	timea = time.time()
-	stepper.rotate_motor(18000)
-	print(time.time() - timea)
+    # 500 rotations requires about 3 minutes
+    timea = time.time()
+    stepper.rotate_motor(500)
+    print(time.time() - timea)
