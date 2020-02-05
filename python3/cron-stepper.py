@@ -10,7 +10,7 @@ if __name__ == '__main__':
     cron_sched.remove_all()
     cron_sched.write()
 
-    job_stepper = cron_sched.new(command='sudo python3 /opt/Janus/main-stepper.py')
+    job_stepper = cron_sched.new(command='sudo python3 /opt/Janus/WM/python3/main-stepper.py')
     # job_stepper.minute.on(0,15,30,45)
     job_stepper.minute.every(5)
     cron_sched.write()
