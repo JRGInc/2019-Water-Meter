@@ -291,9 +291,10 @@ class CaptureCfg(object):
         # SVGA 800x600
         # XGA  1024x768
         self.cam_cfg_dict = {
-            'mode': 1,
-            'width': 1920,
-            'height': 1080,
+            'mode': 2,
+            'width': 1536,
+            'height': 1536,
+            'quality': 20,
             'shutter': 100000,              # Microseconds, 0 = auto
             'sharpness': 100,               # -100 to 100, 0 = default
             'saturation': 0,                # -100 to 100, 0 = default
